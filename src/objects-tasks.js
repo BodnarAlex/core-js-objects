@@ -37,12 +37,7 @@ function mergeObjects(objects) {
   const newObj = {};
   objects.forEach((item) => {
     Object.entries(item).forEach(([index, value]) => {
-      console.log(`${index}`);
-      if (index in newObj) {
-        newObj[index] += value;
-      } else {
-        newObj[index] = value;
-      }
+      newObj[index] = index in newObj ? newObj[index] + value : value;
     });
   });
   return newObj;
