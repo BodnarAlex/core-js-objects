@@ -343,33 +343,79 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+const TYPES = {
+  element: 0,
+  id: 1,
+  class: 2,
+  attr: 3,
+  pseudoClass: 4,
+  pseudoElement: 5,
+};
+
+const DO_NOT_DUBLE = [TYPES.element, TYPES.id, TYPES.pseudoElement];
+
+const ERROR_DUBLE = new Error(
+  'Element, id and pseudo-element should not occur more then one time inside the selector'
+);
+
+const ERROR_ORDER = new Error(
+  'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+);
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  resultStr: '',
+  selectorArr: [],
+
+  element(value) {
+    return this.check(value, TYPES.element);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return this.check(`#${value}`, TYPES.id);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return this.check(`.${value}`, TYPES.class);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return this.check(`[${value}]`, TYPES.attr);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return this.check(`:${value}`, TYPES.pseudoClass);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return this.check(`::${value}`, TYPES.pseudoElement);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const objResult = { ...this };
+    objResult.resultStr = `${selector1.resultStr} ${combinator} ${selector2.resultStr}`;
+    return objResult;
+  },
+
+  stringify() {
+    return this.resultStr;
+  },
+
+  check(value, selector) {
+    if (
+      this.selectorArr.includes(selector) &&
+      DO_NOT_DUBLE.includes(selector)
+    ) {
+      throw ERROR_DUBLE;
+    }
+
+    if (this.selectorArr.at(-1) > selector) {
+      throw ERROR_ORDER;
+    }
+
+    const objResult = { ...this };
+    objResult.selectorArr = this.selectorArr.concat(selector);
+    objResult.resultStr = `${this.resultStr}${value}`;
+    return objResult;
   },
 };
 
